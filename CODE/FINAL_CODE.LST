@@ -1,0 +1,492 @@
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.02
+OBJECT MODULE PLACED IN FINAL_CODE.OBJ
+ASSEMBLER INVOKED BY: C:\Keil\C51\BIN\A51.EXE FINAL_CODE.ASM SET(SMALL) DEBUG EP
+
+LOC  OBJ            LINE     SOURCE
+
+  1000                 1                                               LCD EQU 1000H 
+  4000                 2     DIPSW EQU 4000H
+  00B4                 3     EN BIT P3.4
+  00B5                 4     RS BIT P3.5
+  0030                 5     THU_TU_PHIM EQU 30H
+  0031                 6     MACOT EQU 31H
+  0032                 7     CHONG_RUNG EQU 32H
+  0033                 8     TEMP EQU 33H
+  0040                 9     DULIEU EQU 40H
+                      10     ;****************************************************************
+                      11     ;CHUONG TRINH CHINH *********************************************
+0000                  12     ORG 0000H
+0000 5101             13     CALL KHOIDONG
+0002 5128             14     CALL CLEAR_LCD
+0004 3166             15     CALL WELCOME
+0006                  16     MAIN:
+0006 31A6             17     CALL DOCPHIMNHAN
+0008 110A             18     CALL MODE
+                      19     
+                      20     ; CHON MODE      *************************************************
+000A                  21     MODE:
+000A 1110             22     CALL DOC_MODE
+000C 4062             23     JC MODE_CALC
+000E 8014             24     JMP MODE_CHANGE
+0010                  25     DOC_MODE:
+0010 B40C02           26     CJNE A,#12,NOT_MODE1
+0013 D3               27     SETB C 
+0014 22               28     RET 
+0015                  29     NOT_MODE1:
+0015 B40D02           30     CJNE A,#13,NOT_MODE2
+0018 C3               31     CLR C
+0019 22               32     RET 
+001A                  33     NOT_MODE2:
+001A D007             34     POP 7
+001C D007             35     POP 7 
+001E D007             36     POP 7
+0020 D007             37     POP 7
+0022 80E2             38     JMP MAIN
+                      39     ; MODE CHANGE: CHUYEN SO NHI PHAN 8 BIT CO DAU RA LED 7
+0024                  40     MODE_CHANGE:
+0024 5128             41     CALL CLEAR_LCD
+0026 755600           42     MOV 56H,#00H
+0029 904000           43     MOV DPTR,#DIPSW
+002C E0               44     MOVX A,@DPTR
+002D 20E731           45     JB ACC.7,SOAM
+0030                  46     SODUONG:
+0030 315C             47     CALL BIN_TO_BCD
+0032 C0E0             48     PUSH ACC 
+0034 E5F0             49     MOV A,B
+0036 2480             50     ADD A,#80H
+0038 F553             51     MOV 53H,A
+003A D0E0             52     POP ACC 
+003C 315C             53     CALL BIN_TO_BCD
+003E C0E0             54     PUSH ACC 
+0040 E5F0             55     MOV A,B
+0042 2440             56     ADD A,#40H
+0044 F554             57     MOV 54H,A
+0046 D0E0             58     POP ACC
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     2
+
+0048 2420             59     ADD A,#20H
+004A F555             60     MOV 55H,A
+004C                  61     HIENTHI:
+004C E553             62     MOV A,53H
+004E 1169             63     CALL HIENLED
+0050 E554             64     MOV A,54H
+0052 1169             65     CALL HIENLED
+0054 E555             66     MOV A,55H
+0056 1169             67     CALL HIENLED
+0058 E556             68     MOV A,56H
+005A 1169             69     CALL HIENLED
+005C 7590EF           70     MOV P1,#0EFH
+005F 80C3             71     JMP MODE_CHANGE
+0061                  72     SOAM:
+0061 F4               73     CPL A
+0062 2401             74     ADD A,#1
+0064 75561A           75     MOV 56H,#1AH
+0067 80C7             76     JMP SODUONG
+0069                  77     HIENLED:
+0069 900000           78     MOV DPTR,#0000H
+006C F0               79     MOVX @DPTR,A
+006D 512D             80     CALL DELAYLCD
+006F 22               81     RET
+                      82     ; MODE CALC: MODE TINH TOAN CONG TRU 2 SO CO 3 CHU SO 
+0070                  83     MODE_CALC:
+0070 754D00           84     MOV 4DH,#00H     
+0073 5128             85     CALL CLEAR_LCD
+0075 7940             86     MOV R1,#40H
+                      87     
+                      88     ; NHAP SO THU NHAT************************************
+0077 7A03             89     MOV R2,#3
+0079                  90     NHAP1:    
+0079 31A6             91     CALL DOCPHIMNHAN
+007B 31BF             92     CALL GIAIMA
+007D F7               93     MOV @R1,A
+007E 511B             94     CALL WRITE_DATA
+0080 09               95     INC R1
+0081 DAF6             96     DJNZ R2,NHAP1
+                      97     ; NHAP PHEP TINH**************************************** 
+0083 3182             98     CALL PHEPTINH
+0085 31BF             99     CALL GIAIMA
+0087 511B            100     CALL WRITE_DATA
+                     101     ;NHAP SO THU 2*******************************************
+0089 7A03            102     MOV R2,#3
+008B                 103     NHAP2:
+008B 31A6            104     CALL DOCPHIMNHAN
+008D 31BF            105     CALL GIAIMA
+008F F7              106     MOV @R1,A
+0090 511B            107     CALL WRITE_DATA
+0092 09              108     INC R1
+0093 DAF6            109     DJNZ R2,NHAP2
+                     110     ;NHAP DAU BANG DE BAT DAU THUC HIEN TINH TOAN************
+0095                 111     DAUBANG:
+0095 31A6            112     CALL DOCPHIMNHAN
+0097 B40BFB          113     CJNE A,#11,DAUBANG
+009A 31BF            114     CALL GIAIMA
+009C 511B            115     CALL WRITE_DATA
+                     116     ; GOI CHUONG TRINH TINH TOAN VA IN RA KET QUA ************
+009E 11B8            117     CALL TINHTOAN
+00A0 11A7            118     CALL KETQUA
+00A2 7590EF          119     MOV P1,#0EFH
+00A5 80FE            120     JMP $ ;CHO NHAN NUT ON/C TREN BAN PHIM DE RESET**********
+                     121     
+                     122     ;CHUONG TRINH XU LY KET QUA TINH TOAN*********************
+00A7                 123     KETQUA:
+00A7 794D            124     MOV R1,#4DH
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     3
+
+00A9 E7              125     MOV A,@R1
+00AA 511B            126     CALL WRITE_DATA
+00AC 794E            127     MOV R1,#4EH
+00AE                 128     LOPP:
+00AE E7              129     MOV A,@R1
+00AF 2430            130     ADD A,#30H
+00B1 511B            131     CALL WRITE_DATA
+00B3 09              132     INC     R1
+00B4 B951F7          133     CJNE R1,#51H,LOPP
+00B7 22              134     RET
+                     135     ;CHUONG TRINH TINH TOAN*************************************
+00B8                 136     TINHTOAN:
+00B8 E546            137     MOV A,46H
+00BA B4FF30          138     CJNE A,#0FFH,TINH_TRU
+                     139     ; BIEU THUC CONG*******************************************
+00BD                 140     TINH_CONG:
+00BD E542            141     MOV A,42H
+00BF 540F            142     ANL A,#0FH
+00C1 8545F0          143     MOV B,45H
+00C4 53F00F          144     ANL B,#0FH
+00C7 25F0            145     ADD A,B 
+00C9 315C            146     CALL BIN_TO_BCD
+00CB 85F050          147     MOV 50H,B
+00CE 2541            148     ADD A,41H
+00D0 24D0            149     ADD A,#-30H
+00D2 2544            150     ADD A,44H
+00D4 24D0            151     ADD A,#-30H
+00D6 315C            152     CALL BIN_TO_BCD
+00D8 85F04F          153     MOV 4FH,B
+00DB 2540            154     ADD A,40H
+00DD 24D0            155     ADD A,#-30H
+00DF 2543            156     ADD A,43H
+00E1 24D0            157     ADD A,#-30H
+00E3 315C            158     CALL BIN_TO_BCD
+00E5 85F04E          159     MOV 4EH,B
+00E8 2430            160     ADD A,#30H
+00EA F54D            161     MOV 4DH,A
+00EC 22              162     RET
+                     163     ;BIEU THUC TRU*******************************************
+00ED                 164     TINH_TRU:
+00ED E540            165     MOV A,40H
+00EF 8543F0          166     MOV B,43H
+00F2 B5F041          167     CJNE A,B,KHACNHAU0 ; GOI CHUONG TRINH DAO DE TINH KET QUA CHO PHEP TRU KET QUA AM
+00F5 E541            168     KIEMTRA0:MOV A,41H
+00F7 8544F0          169     MOV B,44H
+00FA B5F03D          170     CJNE A,B,KHACNHAU1
+00FD E542            171     KIEMTRA1:MOV A,42H
+00FF 8545F0          172     MOV B,45H
+0102 B5F039          173     CJNE A,B,KHACNHAU2
+                     174     
+0105                 175     THUAN:
+0105 E542            176     MOV A,42H
+0107 8545F0          177     MOV B,45H
+010A C2D7            178     CLR CY
+010C 95F0            179     SUBB A,B
+010E 30E704          180     JNB ACC.7,LUU0
+0111 240A            181     ADD A,#0AH
+0113 D2D7            182     SETB CY
+0115 F550            183     LUU0:MOV 50H,A
+0117 E541            184     MOV A,41H
+0119 8544F0          185     MOV B,44H
+011C 95F0            186     SUBB A,B
+011E 30E704          187     JNB ACC.7,LUU1
+0121 240A            188     ADD A,#0AH
+0123 D2D7            189     SETB CY
+0125 F54F            190     LUU1:MOV 4FH,A
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     4
+
+0127 E540            191     MOV A,40H
+0129 8543F0          192     MOV B,43H
+012C 95F0            193     SUBB A,B
+012E 30E702          194     JNB ACC.7,LUU2
+0131 240A            195     ADD A,#0AH
+0133 F54E            196     LUU2:MOV 4EH,A
+0135 22              197     RET
+                     198     ; CHUONG TRINH DAO DE THAY DOI O NHO LUU DU LIEU 
+0136                 199     KHACNHAU0:
+0136 50CD            200     JNC THUAN
+0138 8006            201     JMP DAO
+013A                 202     KHACNHAU1:
+013A 50C9            203     JNC THUAN
+013C 8002            204     JMP DAO
+013E                 205     KHACNHAU2:
+013E 50C5            206     JNC THUAN
+0140                 207     DAO:
+0140 50C3            208     JNC THUAN
+0142 E540            209     MOV A,40H
+0144 7943            210     MOV R1,#43H
+0146 C7              211     XCH A,@R1
+0147 F540            212     MOV 40H,A
+0149 E541            213     MOV A,41H
+014B 7944            214     MOV R1,#44H
+014D C7              215     XCH A,@R1
+014E F541            216     MOV 41H,A
+0150 E542            217     MOV A,42H
+0152 7945            218     MOV R1,#45H
+0154 C7              219     XCH A,@R1
+0155 F542            220     MOV 42H,A
+0157 754D2D          221     MOV 4DH,#"-"
+015A 80A9            222     JMP THUAN
+                     223     ; CHUONG TRINH CHUYEN SO NHI PHAN SANG BCD
+015C                 224     BIN_TO_BCD:
+015C 75F00A          225     MOV B,#10
+015F 84              226     DIV AB 
+0160 F551            227     MOV 51H,A
+0162 85F052          228     MOV 52H,B
+0165 22              229     RET
+                     230     ; CHUONG TRINH CHAO MUNG **************************************
+0166                 231     WELCOME:
+0166 7E00            232     MOV R6,#0
+0168                 233     CHAY:
+0168 900174          234     MOV DPTR,#LOICHAO
+016B EE              235     MOV A,R6
+016C 93              236     MOVC A,@A+DPTR
+016D 511B            237     CALL WRITE_DATA
+016F 0E              238     INC R6
+0170 B400F5          239     CJNE A,#00H,CHAY
+0173 22              240     RET
+                     241     
+0174 4D4F4920        242     LOICHAO: DB "MOI CHON MODE",0
+0178 43484F4E                
+017C 204D4F44                
+0180 4500                    
+                     243     ;CHUONG TRINH DOC PHIM NHAN TU BAN PHIM MA TRAN*****************
+0182                 244     PHEPTINH:
+0182 31A6            245     CALL DOCPHIMNHAN
+0184 318A            246     CALL DOC_PHEPTINH
+0186 4012            247     JC CONG
+0188 8016            248     JMP TRU
+018A                 249     DOC_PHEPTINH:
+018A B40E02          250     CJNE A,#14,NOT_TRU
+018D C3              251     CLR C 
+018E 22              252     RET 
+018F                 253     NOT_TRU:        ; KHONG PHAI DAU TRU ********************************
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     5
+
+018F B40F02          254     CJNE A,#15,NOT_CONG
+0192 D3              255     SETB C
+0193 22              256     RET 
+0194                 257     NOT_CONG:       ; KHONG PHAI DAU CONG********************************* 
+0194 D007            258     POP 7
+0196 D007            259     POP 7 
+0198 80E8            260     JMP PHEPTINH
+                     261     ; PHEP CONG**************************************************
+019A                 262     CONG:
+019A 740F            263     MOV A,#15
+019C 7546FF          264     MOV 46H,#0FFH
+019F 22              265     RET
+                     266     ; PHEP TRU***************************************************
+01A0                 267     TRU:
+01A0 740E            268     MOV A,#14
+01A2 754600          269     MOV 46H,#00H
+01A5 22              270     RET
+                     271     ; CHUONG TRINH DOC PHIM NHAN 
+                     272     ;****************************************************************
+01A6                 273     DOCPHIMNHAN:
+01A6 753232          274     MOV CHONG_RUNG,#50                   ;CHONG RUNG KHI NHAN PHIM
+01A9 31C4            275     CHECK0:CALL CHECK_PHIM_NHAN               
+01AB 40F9            276     JC DOCPHIMNHAN                     ;C = 1 LA KO CO PHIM NHAN
+01AD D532F9          277     DJNZ CHONG_RUNG,CHECK0
+01B0 F533            278     MOV TEMP,A                         ;LUU TAM THU TU PHIM   
+01B2 753232          279     CHECK1:MOV CHONG_RUNG,#50                ;CHONG RUNG KHI NHA PHIM
+01B5 31C4            280     CHECK2:CALL CHECK_PHIM_NHAN
+01B7 50F9            281     JNC CHECK1                             ;C = 0 LA CO PHIM NHAN
+01B9 D532F9          282     DJNZ CHONG_RUNG,CHECK2
+01BC                 283     EXIT:
+01BC E533            284     MOV A,TEMP
+01BE 22              285     RET
+01BF                 286     GIAIMA:
+01BF 9001F1          287     MOV DPTR,#BUTTON
+01C2 93              288     MOVC A,@A+DPTR
+01C3 22              289     RET
+                     290     ;****************************************************************
+01C4                 291     CHECK_PHIM_NHAN:
+01C4 753000          292     MOV    THU_TU_PHIM,#0
+01C7 7531EF          293     MOV    MACOT,#0EFH            ;MA COT 1
+01CA 853190          294     XOAY:MOV    P1,MACOT
+01CD 5140            295     CALL DELAYFAST
+01CF E590            296     MOV     A,P1
+01D1 540F            297     ANL      A,#0FH                      ;LAY MA HANG
+01D3 B40F10          298     CJNE    A,#0FH,LAPMA          ;KIEM TRA CO NHAN PHIM KO
+                     299     ;KHONG CO PHIM NHAN*************************************************
+01D6 E530            300     MOV     A,THU_TU_PHIM
+01D8 2404            301     ADD     A,#4
+01DA F530            302     MOV     THU_TU_PHIM,A                  ;THU_TU_PHIM = THU_TU_PHIM + 4
+01DC E531            303     MOV     A,MACOT           
+01DE 23              304     RL      A                               ;DICH SANG COT KE
+01DF F531            305     MOV     MACOT,A
+01E1 B4FEE6          306     CJNE    A,#0FEH,XOAY               ;KIEM TRA DA DICH DEN COT THU 4 CHUA ?
+01E4 D3              307     SETB    C                               ;KO CO PHIM BAM
+01E5 22              308     RET
+                     309     ;CO PHIM NHAN ************************************************************
+01E6                 310     LAPMA:
+01E6 13              311     RRC    A
+01E7 5004            312     JNC    LUU_THU_TU
+01E9 0530            313     INC    THU_TU_PHIM                      ;MA PHIM = MA PHIM + 1
+01EB 80F9            314     JMP    LAPMA
+01ED E530            315     LUU_THU_TU:MOV   A,THU_TU_PHIM                   ;DA CO PHIM AN
+01EF C3              316     CLR     C
+01F0 22              317     RET
+                     318     ;*************************************************************************
+                     319     ;BANG MA DE DOC BAN PHIM MA TRAN 
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     6
+
+01F1                 320     BUTTON:
+01F1 3734314F        321     DB 37H,34H,31H,"O"
+01F5 38353230        322     DB 38H,35H,32H,30H
+01F9 3936333D        323     DB 39H,36H,33H,"="
+01FD 41422D2B        324     DB "A","B","-","+"
+                     325     ; CHUONG TRINH KHOI DONG LCD*********************************************
+0201                 326     KHOIDONG:
+0201 7438            327             MOV A, #38H
+0203 510E            328             CALL WRITE_LENH
+0205 7406            329             MOV A, #06H
+0207 510E            330             CALL WRITE_LENH
+0209 740E            331             MOV A, #0EH
+020B 510E            332             CALL WRITE_LENH
+                     333     ;       MOV A, #0CH
+                     334     ;       CALL WRITE_LENH
+020D 22              335             RET
+                     336     ;CHUONG TRINH GUI LENH DEN LCD*******************************************
+020E                 337     WRITE_LENH:
+020E 901000          338             MOV DPTR,#LCD
+0211 F0              339             MOVX @DPTR, A
+0212 D2B4            340             SETB EN
+0214 C2B5            341             CLR RS
+0216 C2B4            342             CLR EN
+0218 512D            343             CALL DELAYLCD
+021A 22              344             RET
+                     345     ;CHUONG TRINH GUI DATA DEN LCD*******************************************
+021B                 346     WRITE_DATA:
+021B 901000          347             MOV DPTR,#LCD
+021E F0              348             MOVX @DPTR, A
+021F D2B4            349             SETB EN
+0221 D2B5            350             SETB RS
+0223 C2B4            351             CLR EN
+0225 512D            352             CALL DELAYLCD
+0227 22              353             RET
+                     354     ;CHUONG TRINH XOA LCD **************************************************
+0228                 355     CLEAR_LCD:
+0228 7401            356     MOV  A,#01H
+022A 510E            357     CALL WRITE_LENH
+022C 22              358     RET
+                     359     ;CHUONG TRINH DELAY LCD *********************************************
+022D                 360     DELAYLCD:
+022D 758901          361     MOV TMOD ,#01H
+0230 758CF8          362     MOV TH0,#HIGH(-2000)
+0233 758A30          363     MOV TL0,#LOW(-2000)
+0236 D28C            364     SETB TR0
+0238 308DFD          365     JNB TF0,$
+023B C28C            366     CLR TR0
+023D C28D            367     CLR TF0
+023F 22              368     RET
+0240                 369     DELAYFAST:
+0240 758901          370     MOV TMOD ,#01H
+0243 758CFF          371     MOV TH0,#HIGH(-50)
+0246 758ACE          372     MOV TL0,#LOW(-50)
+0249 D28C            373     SETB TR0
+024B 308DFD          374     JNB TF0,$
+024E C28C            375     CLR TR0
+0250 C28D            376     CLR TF0
+0252 22              377     RET
+                     378     END
+                             ;XONGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     7
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+BIN_TO_BCD . . . .  C ADDR   015CH   A   
+BUTTON . . . . . .  C ADDR   01F1H   A   
+CHAY . . . . . . .  C ADDR   0168H   A   
+CHECK0 . . . . . .  C ADDR   01A9H   A   
+CHECK1 . . . . . .  C ADDR   01B2H   A   
+CHECK2 . . . . . .  C ADDR   01B5H   A   
+CHECK_PHIM_NHAN. .  C ADDR   01C4H   A   
+CHONG_RUNG . . . .  N NUMB   0032H   A   
+CLEAR_LCD. . . . .  C ADDR   0228H   A   
+CONG . . . . . . .  C ADDR   019AH   A   
+CY . . . . . . . .  B ADDR   00D0H.7 A   
+DAO. . . . . . . .  C ADDR   0140H   A   
+DAUBANG. . . . . .  C ADDR   0095H   A   
+DELAYFAST. . . . .  C ADDR   0240H   A   
+DELAYLCD . . . . .  C ADDR   022DH   A   
+DIPSW. . . . . . .  N NUMB   4000H   A   
+DOCPHIMNHAN. . . .  C ADDR   01A6H   A   
+DOC_MODE . . . . .  C ADDR   0010H   A   
+DOC_PHEPTINH . . .  C ADDR   018AH   A   
+DULIEU . . . . . .  N NUMB   0040H   A   
+EN . . . . . . . .  B ADDR   00B0H.4 A   
+EXIT . . . . . . .  C ADDR   01BCH   A   
+GIAIMA . . . . . .  C ADDR   01BFH   A   
+HIENLED. . . . . .  C ADDR   0069H   A   
+HIENTHI. . . . . .  C ADDR   004CH   A   
+KETQUA . . . . . .  C ADDR   00A7H   A   
+KHACNHAU0. . . . .  C ADDR   0136H   A   
+KHACNHAU1. . . . .  C ADDR   013AH   A   
+KHACNHAU2. . . . .  C ADDR   013EH   A   
+KHOIDONG . . . . .  C ADDR   0201H   A   
+KIEMTRA0 . . . . .  C ADDR   00F5H   A   
+KIEMTRA1 . . . . .  C ADDR   00FDH   A   
+LAPMA. . . . . . .  C ADDR   01E6H   A   
+LCD. . . . . . . .  N NUMB   1000H   A   
+LOICHAO. . . . . .  C ADDR   0174H   A   
+LOPP . . . . . . .  C ADDR   00AEH   A   
+LUU0 . . . . . . .  C ADDR   0115H   A   
+LUU1 . . . . . . .  C ADDR   0125H   A   
+LUU2 . . . . . . .  C ADDR   0133H   A   
+LUU_THU_TU . . . .  C ADDR   01EDH   A   
+MACOT. . . . . . .  N NUMB   0031H   A   
+MAIN . . . . . . .  C ADDR   0006H   A   
+MODE . . . . . . .  C ADDR   000AH   A   
+MODE_CALC. . . . .  C ADDR   0070H   A   
+MODE_CHANGE. . . .  C ADDR   0024H   A   
+NHAP1. . . . . . .  C ADDR   0079H   A   
+NHAP2. . . . . . .  C ADDR   008BH   A   
+NOT_CONG . . . . .  C ADDR   0194H   A   
+NOT_MODE1. . . . .  C ADDR   0015H   A   
+NOT_MODE2. . . . .  C ADDR   001AH   A   
+NOT_TRU. . . . . .  C ADDR   018FH   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PHEPTINH . . . . .  C ADDR   0182H   A   
+RS . . . . . . . .  B ADDR   00B0H.5 A   
+SOAM . . . . . . .  C ADDR   0061H   A   
+SODUONG. . . . . .  C ADDR   0030H   A   
+TEMP . . . . . . .  N NUMB   0033H   A   
+A51 MACRO ASSEMBLER  FINAL_CODE                                                           05/14/2021 23:03:13 PAGE     8
+
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TH0. . . . . . . .  D ADDR   008CH   A   
+THUAN. . . . . . .  C ADDR   0105H   A   
+THU_TU_PHIM. . . .  N NUMB   0030H   A   
+TINHTOAN . . . . .  C ADDR   00B8H   A   
+TINH_CONG. . . . .  C ADDR   00BDH   A   
+TINH_TRU . . . . .  C ADDR   00EDH   A   
+TL0. . . . . . . .  D ADDR   008AH   A   
+TMOD . . . . . . .  D ADDR   0089H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+TRU. . . . . . . .  C ADDR   01A0H   A   
+WELCOME. . . . . .  C ADDR   0166H   A   
+WRITE_DATA . . . .  C ADDR   021BH   A   
+WRITE_LENH . . . .  C ADDR   020EH   A   
+XOAY . . . . . . .  C ADDR   01CAH   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
